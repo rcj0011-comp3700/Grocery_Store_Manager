@@ -23,7 +23,7 @@ public class Main
             // execute the query, and get a java resultSet
             ResultSet rs = st.executeQuery(query);
 
-            createMenu();
+            createMenu(rs, con);
 
             con.close();
         }
@@ -33,9 +33,17 @@ public class Main
         }
     }
 
-    public static int changeItem(String name, String category, String value, ResultSet rs, Connection con) throws SQLException
+    public static int changeItem(String name, String category, String value) throws SQLException
     {
         String statement = "";
+
+        String host = "jdbc:mysql://localhost/grocery_store";
+
+        Connection con = DriverManager.getConnection(host, "root", "cameron1");
+
+        String query = "SELECT * FROM inventory";
+        Statement st = con.createStatement();
+        ResultSet rs = st.executeQuery(query);
 
         while(rs.next())
         {
@@ -64,8 +72,8 @@ public class Main
 
         if(statement != "")
         {
-            PreparedStatement st = con.prepareStatement(statement);
-            st.execute();
+            PreparedStatement stat = con.prepareStatement(statement);
+            stat.execute();
             System.out.println("Changed item: " + name);
             return 1;
         }
@@ -75,33 +83,6 @@ public class Main
             return 0;
         }
     }
-
-/*    public static product lookupItem(String item, Connection con) throws SQLException
-    {
-        String query = "SELECT * FROM inventory";
-        Statement st = con.createStatement();
-        ResultSet rs = st.executeQuery(query);
-
-        while(rs.next())
-        {
-            if(rs.getString("Name").equals(item))
-            {
-                product temp = new product(getLastID(rs), item, rs.getDouble(3), rs.getInt(4), rs.getString(5));
-                return temp;
-            }
-        }
-        return null;
-    }
-
-    public static int getLastID(ResultSet rs) throws SQLException
-    {
-        int count = 0;
-
-        while(rs.next())
-            count++;
-
-        return count+1;
-    }*/
 
     public static double getPrice(String item) throws SQLException
     {
@@ -125,8 +106,16 @@ public class Main
         return price;
     }
 
-    public static void newItem(product thing, Connection con) throws SQLException
+    public static void newItem(product thing) throws SQLException
     {
+        String host = "jdbc:mysql://localhost/grocery_store";
+
+        Connection con = DriverManager.getConnection(host, "root", "cameron1");
+
+        String query = "SELECT * FROM inventory";
+        Statement st = con.createStatement();
+        ResultSet rs = st.executeQuery(query);
+
         int ID = thing.getID();
         String name = thing.getName();
         double price = thing.getPrice();
@@ -135,12 +124,12 @@ public class Main
 
         String statement = "INSERT INTO inventory VALUES (" + ID + ", '" + name + "', " + price + ", " + quantity + ", '" + producer + "')";
 
-        PreparedStatement st = con.prepareStatement(statement);
+        PreparedStatement stat = con.prepareStatement(statement);
 
-        st.execute();
+        stat.execute();
     }
 
-    public static void createMenu()
+    public static void createMenu(ResultSet rs, Connection con) throws SQLException
     {
         JFrame frame = new JFrame("Grocery Store");
         frame.getContentPane().setBackground(new Color(160, 250, 255));
@@ -161,7 +150,9 @@ public class Main
         manageButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e)
             {
-                System.out.println("Manage items");
+                try {
+                    manage();
+                } catch (SQLException e1) { e1.printStackTrace(); }
             }
         });
 
@@ -220,7 +211,7 @@ public class Main
                 int temp;
                 String text = itemField.getText();
                 try {
-                    temp = changeItem(text, "Quantity", "-1", rs, con);
+                    temp = changeItem(text, "Quantity", "-1");
                     if(temp == 1)
                     {
                         printList += text + "\n";
@@ -374,5 +365,162 @@ public class Main
 
         payMenu.setSize(500, 400);
         payMenu.setVisible(true);
+    }
+
+    private static String cat;
+    private static JTextField IDTextField, nameTextField, priceTextField, quantityTextField, producerTextField, newValue, itemName;
+
+    public static void manage() throws SQLException
+    {
+        JFrame manageWindow = new JFrame();
+        manageWindow.getContentPane().setBackground(new Color(160, 250, 255));
+
+        JLabel manageTitle = new JLabel("Manage Items");
+        JPanel titlePanel = new JPanel();
+        JPanel radioButtonsPanel = new JPanel();
+        JButton changeItemButton = new JButton("Change Item");
+        newValue = new JTextField(10);
+        itemName = new JTextField(10);
+        JButton newItemButton = new JButton("Add New Item");
+        JPanel changeItemPanelButton = new JPanel();
+        JPanel newValuePanel = new JPanel();
+        JLabel descriptionLabel = new JLabel("ID            Name                Price               Quantity           Producer");
+        JPanel descriptionPanel = new JPanel();
+        JLabel changeDescriptionLabel = new JLabel("Name                     New Value");
+        JPanel changeDescriptionPanel = new JPanel();
+        JPanel everything = new JPanel();
+
+        JPanel addItemPanel = new JPanel();
+        JPanel addItemPanelButton = new JPanel();
+        IDTextField = new JTextField(3);
+        nameTextField = new JTextField(7);
+        priceTextField = new JTextField(7);
+        quantityTextField = new JTextField(7);
+        producerTextField = new JTextField(7);
+        addItemPanel.add(IDTextField);
+        addItemPanel.add(nameTextField);
+        addItemPanel.add(priceTextField);
+        addItemPanel.add(quantityTextField);
+        addItemPanel.add(producerTextField);
+
+        changeItemPanelButton.add(changeItemButton);
+        addItemPanelButton.add(newItemButton);
+
+        JRadioButton ID = new JRadioButton("ID");
+        JRadioButton name = new JRadioButton("Name");
+        JRadioButton price = new JRadioButton("Price");
+        JRadioButton quantity = new JRadioButton("Quantity");
+        JRadioButton producer = new JRadioButton("Producer");
+        ButtonGroup bG = new ButtonGroup();
+        bG.add(ID);
+        bG.add(name);
+        bG.add(price);
+        bG.add(quantity);
+        bG.add(producer);
+        radioButtonsPanel.add(ID);
+        radioButtonsPanel.add(name);
+        radioButtonsPanel.add(price);
+        radioButtonsPanel.add(quantity);
+        radioButtonsPanel.add(producer);
+        ID.setSelected(true);
+
+        cat = "ID";
+
+        ID.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            { cat = "ID"; }
+        });
+        name.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            { cat = "Name"; }
+        });
+        price.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            { cat = "Price"; }
+        });
+        quantity.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            { cat = "Quantity"; }
+        });
+        producer.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            { cat = "Producer"; }
+        });
+
+        changeItemButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            {
+                try {
+                    changeItem(newValue.getText(), cat, itemName.getText());
+                    System.out.println("Changed item.");
+                } catch (SQLException e1) { e1.printStackTrace(); }
+            }
+        });
+
+        newItemButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            {
+                product temp = new product(Integer.valueOf(IDTextField.getText()), nameTextField.getText(),
+                        Double.valueOf(priceTextField.getText()), Integer.valueOf(quantityTextField.getText()), producerTextField.getText());
+                try {
+                    newItem(temp);
+                    System.out.println("Added new item.");
+                } catch (SQLException e1) { e1.printStackTrace(); }
+            }
+        });
+
+        titlePanel.add(manageTitle);
+        //titlePanel.setBackground(Color.WHITE);
+        manageTitle.setFont(new Font("Calibri", Font.BOLD, 30));
+        titlePanel.setBounds(150,0,200,50);
+        titlePanel.setOpaque(false);
+
+        //radioButtonsPanel.setBackground(Color.BLUE);
+        radioButtonsPanel.setBounds(50,75,400,40);
+        radioButtonsPanel.setOpaque(false);
+
+        //addItemPanel.setBackground(Color.GREEN);
+        addItemPanel.setBounds(25,225,450,40);
+        addItemPanel.setOpaque(false);
+
+        //addItemPanelButton.setBackground(Color.RED);
+        addItemPanelButton.setBounds(175,260,150,40);
+        addItemPanelButton.setOpaque(false);
+
+        //changeItemPanelButton.setBackground(Color.GRAY);
+        changeItemPanelButton.setBounds(325,130,150,30);
+        changeItemPanelButton.setOpaque(false);
+
+        newValuePanel.add(newValue);
+        newValuePanel.add(itemName);
+        //newValuePanel.setBackground(Color.ORANGE);
+        newValuePanel.setBounds(25,130,275,30);
+        newValuePanel.setOpaque(false);
+
+        descriptionPanel.add(descriptionLabel);
+        //descriptionPanel.setBackground(Color.PINK);
+        descriptionPanel.setBounds(25,210,450,20);
+        descriptionPanel.setOpaque(false);
+
+        changeDescriptionPanel.add(changeDescriptionLabel);
+        //changeDescriptionPanel.setBackground(Color.MAGENTA);
+        changeDescriptionPanel.setBounds(45,110,250,20);
+        changeDescriptionPanel.setOpaque(false);
+
+        //everything.setBackground(Color.YELLOW);
+        everything.setOpaque(false);
+
+        manageWindow.getContentPane().add(titlePanel);
+        manageWindow.getContentPane().add(radioButtonsPanel);
+        manageWindow.getContentPane().add(changeItemPanelButton);
+        manageWindow.getContentPane().add(addItemPanel);
+        manageWindow.getContentPane().add(addItemPanelButton);
+        manageWindow.getContentPane().add(newValuePanel);
+        manageWindow.getContentPane().add(descriptionPanel);
+        manageWindow.getContentPane().add(changeDescriptionPanel);
+        manageWindow.getContentPane().add(everything);
+
+        manageWindow.setSize(500, 400);
+        manageWindow.setVisible(true);
     }
 }
