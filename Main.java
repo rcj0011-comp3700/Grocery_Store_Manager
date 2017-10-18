@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.lang.Math;
 
 public class Main
 {
@@ -118,6 +119,9 @@ public class Main
             if (rs.getString("Name").equals(item))
                 price = rs.getDouble(3);
 
+        String temp = String.format("%.2f", price);
+        price = Double.parseDouble(temp);
+
         return price;
     }
 
@@ -184,7 +188,7 @@ public class Main
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private static String list;
+    private static String labelList, printList;
     private static int x;
     private static double total;
     private static JLabel totalLabel, itemList;
@@ -199,7 +203,8 @@ public class Main
         Statement st = con.createStatement();
         ResultSet rs = st.executeQuery(query);
 
-        list = "";
+        labelList = "";
+        printList = "";
         x = 0;
         total = 0;
 
@@ -218,13 +223,15 @@ public class Main
                     temp = changeItem(text, "Quantity", "-1", rs, con);
                     if(temp == 1)
                     {
-                        list += text + "\n";
+                        printList += text + "\n";
+                        labelList += text + "<br>";
                         x++;
                         total += getPrice(text);
                     }
                     System.out.println("Item: " + text + "\nPrice: " + getPrice(text) + "\nTotal: " + total);
-                    totalLabel.setText("$" + String.valueOf(total));
-                    itemList.setText("Items:\n" + list);
+                    totalLabel.setText(String.format("$%.2f", total));
+                    itemList.setText("<html>Items:<br>" + labelList + "<html>");
+                    System.out.println(printList);
                 } catch (SQLException e1) { e1.printStackTrace(); }
             }
         });
@@ -234,6 +241,16 @@ public class Main
 
         JButton payButton = new JButton("Pay");
         payButton.setPreferredSize(new Dimension(75, 40));
+
+        payButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            {
+                checkoutWindow.dispose();
+                try {
+                    pay();
+                } catch (SQLException e1) { e1.printStackTrace(); }
+            }
+        });
 
         JLabel totalTitle = new JLabel("Total", SwingConstants.CENTER);
         JPanel titlePanel = new JPanel();
@@ -251,36 +268,111 @@ public class Main
 
         totalPanel.add(totalLabel);
         //totalPanel.setBackground(Color.GREEN);
-        totalPanel.setBounds(375,150,75,50);
+        totalPanel.setBounds(375,50,75,50);
         totalLabel.setFont(new Font("Calibri", Font.BOLD,20));
         totalPanel.setOpaque(false);
 
         itemPanel.add(itemList);
         //itemPanel.setBackground(Color.GRAY);
-        itemPanel.setBounds(50,210,300,150);
+        itemPanel.setBounds(50,110,300,250);
         totalLabel.setFont(new Font("Calibri", Font.PLAIN, 15));
         itemPanel.setOpaque(false);
 
         itemTotalPanel.add(itemField);
         //itemTotalPanel.setBackground(Color.WHITE);
-        itemTotalPanel.setBounds(50,150,300,50);
+        itemTotalPanel.setBounds(50,50,300,50);
         itemTotalPanel.setOpaque(false);
 
         checkoutPanel.add(payButton);
         //checkoutPanel.setBackground(Color.BLUE);
-        checkoutPanel.setBounds(375,275,85,50);
+        checkoutPanel.setBounds(375,175,85,50);
         checkoutPanel.setOpaque(false);
 
         //everything.setBackground(Color.YELLOW);
         everything.setOpaque(false);
 
-        checkoutWindow.setSize(500, 400);
-        checkoutWindow.setVisible(true);
         checkoutWindow.getContentPane().add(titlePanel);
         checkoutWindow.getContentPane().add(totalPanel);
         checkoutWindow.getContentPane().add(itemPanel);
         checkoutWindow.getContentPane().add(itemTotalPanel);
         checkoutWindow.getContentPane().add(checkoutPanel);
         checkoutWindow.getContentPane().add(everything);
+
+        checkoutWindow.setSize(500, 400);
+        checkoutWindow.setVisible(true);
+    }
+
+    public static void pay() throws SQLException
+    {
+        JFrame payMenu = new JFrame();
+        payMenu.getContentPane().setBackground(new Color(160, 250, 255));
+
+        JPanel titlePanel = new JPanel();
+        JPanel totalPanel = new JPanel();
+        JPanel radioButtonsPanel = new JPanel();
+        JPanel payButtonPanel = new JPanel();
+        JLabel payTitle = new JLabel("Payment");
+        JLabel totalLabel = new JLabel(String.format("$%.2f", total));
+        JPanel everything = new JPanel();
+        JButton payButton = new JButton("Finish and Pay");
+
+        JRadioButton cash = new JRadioButton("Cash");
+        JRadioButton debit = new JRadioButton("Debit Card");
+        JRadioButton credit = new JRadioButton("Credit Card");
+        JRadioButton check = new JRadioButton("Check");
+        JRadioButton EBT = new JRadioButton("EBT");
+        ButtonGroup bG = new ButtonGroup();
+        bG.add(cash);
+        bG.add(debit);
+        bG.add(credit);
+        bG.add(check);
+        bG.add(EBT);
+        radioButtonsPanel.add(cash);
+        radioButtonsPanel.add(debit);
+        radioButtonsPanel.add(credit);
+        radioButtonsPanel.add(check);
+        radioButtonsPanel.add(EBT);
+        cash.setSelected(true);
+
+        payMenu.getContentPane().add(titlePanel);
+        payMenu.getContentPane().add(totalPanel);
+        payMenu.getContentPane().add(radioButtonsPanel);
+        payMenu.getContentPane().add(payButtonPanel);
+        payMenu.getContentPane().add(everything);
+
+        titlePanel.add(payTitle);
+        totalPanel.add(totalLabel);
+        payButtonPanel.add(payButton);
+
+        payButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e)
+            {
+                payMenu.dispose();
+            }
+        });
+
+        titlePanel.setBackground(Color.WHITE);
+        payTitle.setFont(new Font("Calibri", Font.BOLD, 30));
+        titlePanel.setBounds(150,0,200,50);
+        titlePanel.setOpaque(false);
+
+        totalPanel.setBackground(Color.BLUE);
+        totalLabel.setFont(new Font("Calibri", Font.PLAIN, 20));
+        totalPanel.setBounds(200,125,100,50);
+        totalPanel.setOpaque(false);
+
+        radioButtonsPanel.setBackground(Color.GREEN);
+        radioButtonsPanel.setBounds(25,190,450,50);
+        radioButtonsPanel.setOpaque(false);
+
+        payButtonPanel.setBackground(Color.RED);
+        payButtonPanel.setBounds(175,260,150,40);
+        payButtonPanel.setOpaque(false);
+
+        everything.setBackground(Color.YELLOW);
+        everything.setOpaque(false);
+
+        payMenu.setSize(500, 400);
+        payMenu.setVisible(true);
     }
 }
