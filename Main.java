@@ -162,7 +162,7 @@ public class Main
         });
 
         frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
-        frame.setSize(500, 450);
+        frame.setSize(500, 400);
 
         JLabel title = new JLabel("Store Management System");
         title.setFont(new Font("Calibri", Font.BOLD, 30));
@@ -207,12 +207,13 @@ public class Main
         JFrame checkoutWindow = new JFrame("Checkout");
         checkoutWindow.getContentPane().setBackground(new Color(160, 250, 255));
 
-        JTextField item = new JTextField(20);
-        item.addActionListener(new ActionListener() {
+        JTextField itemField = new JTextField(20);
+
+        itemField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e)
             {
                 int temp;
-                String text = item.getText();
+                String text = itemField.getText();
                 try {
                     temp = changeItem(text, "Quantity", "-1", rs, con);
                     if(temp == 1)
@@ -222,31 +223,64 @@ public class Main
                         total += getPrice(text);
                     }
                     System.out.println("Item: " + text + "\nPrice: " + getPrice(text) + "\nTotal: " + total);
-                    totalLabel.setText(String.valueOf(total));
+                    totalLabel.setText("$" + String.valueOf(total));
                     itemList.setText("Items:\n" + list);
                 } catch (SQLException e1) { e1.printStackTrace(); }
             }
         });
 
-        JLabel totalTitle = new JLabel("Total", SwingConstants.CENTER);
-        totalTitle.setFont(new Font("Calibri", Font.BOLD, 30));
-
         itemList = new JLabel("Items:");
-        totalLabel = new JLabel("Total");
+        totalLabel = new JLabel("$0.00");
 
-        JButton payButton = new JButton("Finish and Pay");
-        payButton.setPreferredSize(new Dimension(150, 40));
+        JButton payButton = new JButton("Pay");
+        payButton.setPreferredSize(new Dimension(75, 40));
 
+        JLabel totalTitle = new JLabel("Total", SwingConstants.CENTER);
+        JPanel titlePanel = new JPanel();
+        JPanel totalPanel = new JPanel();
+        JPanel itemPanel = new JPanel();
+        JPanel itemTotalPanel = new JPanel();
         JPanel checkoutPanel = new JPanel();
-        checkoutPanel.add(totalTitle);
-        checkoutPanel.add(totalLabel);
-        checkoutPanel.add(itemList);
-        checkoutPanel.add(item);
-        checkoutPanel.add(payButton);
+        JPanel everything = new JPanel();
 
-        checkoutWindow.setSize(500, 450);
+        titlePanel.add(totalTitle);
+        //titlePanel.setBackground(Color.RED);
+        titlePanel.setBounds(200,0,100,100);
+        totalTitle.setFont(new Font("Calibri", Font.BOLD, 30));
+        titlePanel.setOpaque(false);
+
+        totalPanel.add(totalLabel);
+        //totalPanel.setBackground(Color.GREEN);
+        totalPanel.setBounds(375,150,75,50);
+        totalLabel.setFont(new Font("Calibri", Font.BOLD,20));
+        totalPanel.setOpaque(false);
+
+        itemPanel.add(itemList);
+        //itemPanel.setBackground(Color.GRAY);
+        itemPanel.setBounds(50,210,300,150);
+        totalLabel.setFont(new Font("Calibri", Font.PLAIN, 15));
+        itemPanel.setOpaque(false);
+
+        itemTotalPanel.add(itemField);
+        //itemTotalPanel.setBackground(Color.WHITE);
+        itemTotalPanel.setBounds(50,150,300,50);
+        itemTotalPanel.setOpaque(false);
+
+        checkoutPanel.add(payButton);
+        //checkoutPanel.setBackground(Color.BLUE);
+        checkoutPanel.setBounds(375,275,85,50);
         checkoutPanel.setOpaque(false);
+
+        //everything.setBackground(Color.YELLOW);
+        everything.setOpaque(false);
+
+        checkoutWindow.setSize(500, 400);
         checkoutWindow.setVisible(true);
+        checkoutWindow.getContentPane().add(titlePanel);
+        checkoutWindow.getContentPane().add(totalPanel);
+        checkoutWindow.getContentPane().add(itemPanel);
+        checkoutWindow.getContentPane().add(itemTotalPanel);
         checkoutWindow.getContentPane().add(checkoutPanel);
+        checkoutWindow.getContentPane().add(everything);
     }
 }
